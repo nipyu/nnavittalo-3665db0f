@@ -29,7 +29,12 @@ export function ContactSection() {
               <div className="contact-card-val">info@nnavittalo.com</div>
             </div>
           </a>
-          <a href="https://wa.me/487294877" target="_blank" rel="noreferrer" className="contact-card">
+          <a
+            href="https://wa.me/487294877"
+            target="_blank"
+            rel="noreferrer"
+            className="contact-card"
+          >
             <span className="contact-card-icon">📞</span>
             <div>
               <div className="contact-card-label">Call / WhatsApp Us</div>

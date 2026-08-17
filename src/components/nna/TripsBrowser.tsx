@@ -159,11 +159,8 @@ export function TripsBrowser() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const toggle = (
-    value: string,
-    list: string[],
-    set: (v: string[]) => void,
-  ) => set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+  const toggle = (value: string, list: string[], set: (v: string[]) => void) =>
+    set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   const trips = useMemo(() => {
     let out = TRIPS.filter((t) => {
