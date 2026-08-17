@@ -76,7 +76,6 @@ function MyBookings() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cancel = async (id: string) => {
