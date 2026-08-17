@@ -76,7 +76,6 @@ function MyBookings() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cancel = async (id: string) => {
@@ -110,7 +109,12 @@ function MyBookings() {
         {signedIn && (
           <button
             className="btn-outline"
-            style={{ fontSize: ".7rem", padding: "6px 12px", borderColor: "#ff4d4d", color: "#ff4d4d" }}
+            style={{
+              fontSize: ".7rem",
+              padding: "6px 12px",
+              borderColor: "#ff4d4d",
+              color: "#ff4d4d",
+            }}
             onClick={logout}
           >
             Log Out
@@ -143,7 +147,9 @@ function MyBookings() {
                 marginBottom: 12,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+              <div
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}
+              >
                 <span style={{ fontWeight: 700, color: "#0f2266" }}>{b.event_name}</span>
                 <span
                   style={{
