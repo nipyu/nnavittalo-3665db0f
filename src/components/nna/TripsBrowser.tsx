@@ -134,6 +134,11 @@ function TripCard({ t, onOpen }: { t: Trip; onOpen: (t: Trip) => void }) {
 }
 
 export function TripsBrowser() {
+  const [appliedActivities, setAppliedActivities] = useState<string[]>([]);
+  const [appliedDurations, setAppliedDurations] = useState<string[]>([]);
+  const [appliedPrices, setAppliedPrices] = useState<string[]>([]);
+  const [appliedDiff, setAppliedDiff] = useState("All");
+
   const [activities, setActivities] = useState<string[]>([]);
   const [durations, setDurations] = useState<string[]>([]);
   const [prices, setPrices] = useState<string[]>([]);
@@ -148,9 +153,6 @@ export function TripsBrowser() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
-        setFiltersOpen(false);
-      }
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
         setSortOpen(false);
       }
@@ -159,26 +161,33 @@ export function TripsBrowser() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const toggle = (
-    value: string,
-    list: string[],
-    set: (v: string[]) => void,
-  ) => set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+  const toggle = (value: string, list: string[], set: (v: string[]) => void) =>
+    set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   const trips = useMemo(() => {
     let out = TRIPS.filter((t) => {
-      if (activities.length && !activities.includes(t.activity)) return false;
-      if (durations.length && !durations.includes(t.durationTag)) return false;
-      if (prices.length && !prices.includes(t.priceRange)) return false;
-      if (diff !== "All" && t.difficulty !== diff) return false;
+      if (appliedActivities.length && !appliedActivities.includes(t.activity)) return false;
+      if (appliedDurations.length && !appliedDurations.includes(t.durationTag)) return false;
+      if (appliedPrices.length && !appliedPrices.includes(t.priceRange)) return false;
+      if (appliedDiff !== "All" && t.difficulty !== appliedDiff) return false;
       return true;
     });
     if (sort === "Price") out = [...out].sort((a, b) => a.price - b.price);
     return out;
-  }, [activities, durations, prices, diff, sort]);
+  }, [appliedActivities, appliedDurations, appliedPrices, appliedDiff, sort]);
 
   const anyActive =
-    activities.length > 0 || durations.length > 0 || prices.length > 0 || diff !== "All";
+    appliedActivities.length > 0 ||
+    appliedDurations.length > 0 ||
+    appliedPrices.length > 0 ||
+    appliedDiff !== "All";
+
+  const applyFilters = () => {
+    setAppliedActivities(activities);
+    setAppliedDurations(durations);
+    setAppliedPrices(prices);
+    setAppliedDiff(diff);
+  };
 
   const clearFilters = () => {
     setActivities([]);
@@ -198,8 +207,14 @@ export function TripsBrowser() {
             <button
               className={`dropdown-btn${filtersOpen ? " active" : ""}`}
               onClick={() => {
-                setFiltersOpen((v) => !v);
-                setSortOpen(false);
+                if (!filtersOpen) {
+                  setActivities(appliedActivities);
+                  setDurations(appliedDurations);
+                  setPrices(appliedPrices);
+                  setDiff(appliedDiff);
+                  setFiltersOpen(true);
+                  setSortOpen(false);
+                }
               }}
             >
               Filters
@@ -211,17 +226,23 @@ export function TripsBrowser() {
                 ▼
               </span>
             </button>
-            {filtersOpen && (
-              <div className="dropdown-panel filters-panel">
-                <div className="filters-panel-head">
+          </div>
+
+          {filtersOpen && (
+            <div className="filters-modal-overlay" onClick={() => setFiltersOpen(false)}>
+              <div className="filters-modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="filters-modal-head">
                   <span>Filter trips</span>
-                  {anyActive && (
+                  {(activities.length > 0 ||
+                    durations.length > 0 ||
+                    prices.length > 0 ||
+                    diff !== "All") && (
                     <button className="filters-clear" onClick={clearFilters}>
                       Clear all
                     </button>
                   )}
                 </div>
-                <div className="filters-grid">
+                <div className="filters-modal-grid">
                   <div className="fgroup">
                     <div className="fgroup-title">Activity Type</div>
                     <div>
@@ -283,8 +304,9 @@ export function TripsBrowser() {
                   </div>
                 </div>
                 <button
-                  className="filters-apply"
+                  className="filters-modal-apply"
                   onClick={() => {
+                    applyFilters();
                     showToast("✅ Filters applied!");
                     setFiltersOpen(false);
                   }}
@@ -292,8 +314,8 @@ export function TripsBrowser() {
                   Show Results
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="dropdown" ref={sortRef}>
             <button

@@ -119,7 +119,11 @@ export function SiteNav() {
           >
             Chat on WhatsApp
           </a>
-          <button className="btn-solid" style={{ width: "100%", marginTop: 10 }} onClick={goPackages}>
+          <button
+            className="btn-solid"
+            style={{ width: "100%", marginTop: 10 }}
+            onClick={goPackages}
+          >
             Book a Trip
           </button>
         </div>
