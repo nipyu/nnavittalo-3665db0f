@@ -1,79 +1,72 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { TRIPS, type Trip } from "@/lib/nna-data";
-import { TripModal } from "./TripModal";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { showToast } from "./Toast";
+import { TripModal } from "./TripModal";
+import { usePackages, type Package } from "@/hooks/use-packages";
 
-const ACTIVITIES = ["Kayaking", "Skiing", "Surfing", "Hiking", "Camping", "City Tours"];
-const DURATIONS = ["Weekend (2–3 days)", "Short (4–5 days)", "Week (6–7 days)"];
+const ACTIVITIES = ["Kayaking", "Surfing", "Skiing", "Hiking", "Camping", "City Tours"];
+const DURATIONS = ["Day Trip (1 day)", "Weekend (2–3 days)", "Short (4–5 days)", "Long (6+ days)"];
 const PRICES = ["Under 400", "400–700 PLN", "700–1000 PLN", "1000+ PLN"];
 const DIFFS = ["All", "Beginner", "Intermediate", "Advanced"];
 
-function TripCard({ t, onOpen }: { t: Trip; onOpen: (t: Trip) => void }) {
-  const comingSoon = t.comingSoon === true;
-  const eur = t.priceEur ?? 0;
+function TripCard({ t, onOpen }: { t: Package; onOpen: (t: Package) => void }) {
+  const eur = t.price_eur ?? Math.round(t.price_pln * 0.23);
+  const comingSoon = t.coming_soon || t.is_disabled;
 
   return (
-    <div
-      className="trip-card"
-      style={comingSoon ? { cursor: "default" } : undefined}
-      onClick={() => {
-        if (!comingSoon) onOpen(t);
-      }}
-    >
-      <div className="trip-img">
-        {t.photo && <img src={t.photo} alt={t.title} loading="lazy" />}
+    <div className={`trip-card${comingSoon ? " is-soon" : ""}`} onClick={() => onOpen(t)}>
+      <div className="trip-img-wrap">
+        <img src={t.photo} alt={t.title} loading="lazy" />
         <div className="trip-badges">
-          {t.badges.map((b) => (
-            <span key={b.l} className={`badge badge-${b.t}`}>
-              {b.l}
-            </span>
-          ))}
+          {Array.isArray(t.badges) &&
+            t.badges.map((b: unknown, i: number) => (
+              <span key={i} className={`badge badge-${b.t}`}>
+                {b.l}
+              </span>
+            ))}
+          {t.is_disabled && <span className="badge badge-soon">Currently Unavailable</span>}
+        </div>
+        <div className="trip-fav" onClick={(e) => e.stopPropagation()}>
+          ♡
         </div>
       </div>
-      <div className="trip-body">
+      <div className="trip-content">
+        <div className="trip-meta">
+          <div className="trip-loc">
+            <span>📍</span> {t.location}
+          </div>
+          <div className="trip-dur">
+            <span>⏳</span> {t.duration}
+          </div>
+        </div>
+        <h3 className="trip-title">
+          <span>{t.emoji}</span>
+          {t.title}
+        </h3>
+        <p className="trip-desc">{t.desc_text}</p>
+
         <div className="trip-tags">
-          {t.tags.map((tg) => (
-            <span key={tg.l} className={`tag tag-${tg.t}`}>
-              {tg.l}
-            </span>
-          ))}
-        </div>
-        <h3 className="trip-title">{t.title}</h3>
-        <div className="trip-loc">📍 {t.location}</div>
-        {t.showPrice && t.tripDate ? (
-          <div className="trip-date-text" style={{ color: "#2952c8" }}>
-            📅 {t.tripDate}
-          </div>
-        ) : (
-          <div className="trip-date-text" style={{ color: "#b0b8cc" }}>
-            📅 Coming soon
-          </div>
-        )}
-
-        <div className="trip-features">
-          {t.features.map((f) => (
-            <span className="feature-tag" key={f}>
-              {f}
-            </span>
-          ))}
+          {Array.isArray(t.tags) &&
+            t.tags.map((tg: unknown, i: number) => (
+              <span key={i} className={`tag tag-${tg.t}`}>
+                {tg.l}
+              </span>
+            ))}
         </div>
 
-        <div className="trip-footer">
-          <div>
-            <div className="trip-price-label">Starting from</div>
-            {t.showPrice && !comingSoon ? (
+        <div className="trip-foot">
+          <div className="trip-price">
+            {t.show_price ? (
               <div
-                className="trip-price"
                 style={{
-                  color: "#2952c8",
-                  fontWeight: 800,
+                  color: "#0f2266",
+                  fontWeight: 900,
                   fontSize: "1.1rem",
                   display: "flex",
                   alignItems: "baseline",
                   gap: 4,
                 }}
               >
-                {t.price} <span style={{ fontSize: "0.85rem" }}>PLN</span>
+                {t.price_pln} <span style={{ fontSize: "0.85rem" }}>PLN</span>
                 <span style={{ margin: "0 2px" }}>/</span>
                 {eur} <span style={{ fontSize: "0.85rem" }}>EUR</span>
               </div>
@@ -111,14 +104,23 @@ function TripCard({ t, onOpen }: { t: Trip; onOpen: (t: Trip) => void }) {
               disabled={comingSoon}
               onClick={(e) => {
                 e.stopPropagation();
-                onOpen(t);
+                if (!comingSoon) onOpen(t);
               }}
+              style={
+                comingSoon
+                  ? {
+                      background: "#e2e8f0",
+                      color: "#94a3b8",
+                      cursor: "not-allowed",
+                      boxShadow: "none",
+                    }
+                  : {}
+              }
             >
               Book Now
             </button>
             <button
-              className={`btn-details${comingSoon ? " btn-disabled-home" : ""}`}
-              disabled={comingSoon}
+              className={`btn-details`}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpen(t);
@@ -134,6 +136,8 @@ function TripCard({ t, onOpen }: { t: Trip; onOpen: (t: Trip) => void }) {
 }
 
 export function TripsBrowser() {
+  const { data: allTrips = [], isLoading } = usePackages(false); // Fetch active packages
+
   const [activities, setActivities] = useState<string[]>([]);
   const [durations, setDurations] = useState<string[]>([]);
   const [prices, setPrices] = useState<string[]>([]);
@@ -141,7 +145,7 @@ export function TripsBrowser() {
   const [sort, setSort] = useState("Upcoming");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
-  const [selected, setSelected] = useState<Trip | null>(null);
+  const [selected, setSelected] = useState<Package | null>(null);
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
@@ -159,23 +163,22 @@ export function TripsBrowser() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const toggle = (
-    value: string,
-    list: string[],
-    set: (v: string[]) => void,
-  ) => set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+  const toggle = (value: string, list: string[], set: (v: string[]) => void) =>
+    set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   const trips = useMemo(() => {
-    let out = TRIPS.filter((t) => {
+    let out = allTrips.filter((t) => {
       if (activities.length && !activities.includes(t.activity)) return false;
-      if (durations.length && !durations.includes(t.durationTag)) return false;
-      if (prices.length && !prices.includes(t.priceRange)) return false;
+      if (durations.length && !durations.includes(t.duration_tag)) return false;
+      if (prices.length && !prices.includes(t.price_range)) return false;
       if (diff !== "All" && t.difficulty !== diff) return false;
       return true;
     });
-    if (sort === "Price") out = [...out].sort((a, b) => a.price - b.price);
+    // Default sorting is already by priority descending from usePackages
+    if (sort === "Price") out = [...out].sort((a, b) => a.price_pln - b.price_pln);
+    if (sort === "Popular") out = [...out].sort((a, b) => b.priority - a.priority); // Example logic
     return out;
-  }, [activities, durations, prices, diff, sort]);
+  }, [activities, durations, prices, diff, sort, allTrips]);
 
   const anyActive =
     activities.length > 0 || durations.length > 0 || prices.length > 0 || diff !== "All";
@@ -186,6 +189,10 @@ export function TripsBrowser() {
     setPrices([]);
     setDiff("All");
   };
+
+  if (isLoading) {
+    return <div className="text-center py-20 text-gray-500">Loading adventures...</div>;
+  }
 
   return (
     <div className="trips-wrap" id="packages">
@@ -315,7 +322,7 @@ export function TripsBrowser() {
               <div className="dropdown-panel sort-panel">
                 {(
                   [
-                    ["Upcoming", "Upcoming"],
+                    ["Upcoming", "Priority / Recommended"],
                     ["Price", "Price ↑"],
                     ["Popular", "Most Popular"],
                   ] as const

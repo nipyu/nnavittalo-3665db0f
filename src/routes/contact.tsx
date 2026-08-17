@@ -22,7 +22,15 @@ export const Route = createFileRoute("/contact")({
 function ContactPage() {
   return (
     <>
-      <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+      <h1
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+        }}
+      >
         Contact NNA VITTALO
       </h1>
       <ContactSection />
