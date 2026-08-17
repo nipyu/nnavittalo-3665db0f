@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TRIPS, type Trip } from "@/lib/nna-data";
 import { TripModal } from "./TripModal";
 import { showToast } from "./Toast";
@@ -139,8 +139,25 @@ export function TripsBrowser() {
   const [prices, setPrices] = useState<string[]>([]);
   const [diff, setDiff] = useState("All");
   const [sort, setSort] = useState("Upcoming");
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [selected, setSelected] = useState<Trip | null>(null);
+
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
+        setFiltersOpen(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const toggle = (
     value: string,
@@ -171,152 +188,171 @@ export function TripsBrowser() {
   };
 
   return (
-    <div className="main-wrap" id="packages">
-      <aside className="filters-sidebar">
-        <div className="filters-header" onClick={() => setFiltersOpen((v) => !v)}>
-          <span>🔍 Filters</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span
-              style={{
-                fontFamily: "Montserrat,sans-serif",
-                fontSize: ".72rem",
-                fontWeight: 600,
-                color: "rgba(255,255,255,.75)",
-                textDecoration: "underline",
-                cursor: "pointer",
-                display: anyActive ? "inline" : "none",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                clearFilters();
-              }}
-            >
-              Clear
-            </span>
-            <span
-              className="arr"
-              style={{ transform: filtersOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-            >
-              ▼
-            </span>
-          </div>
+    <div className="trips-wrap" id="packages">
+      <div className="trips-controls-bar">
+        <div className="trips-count">
+          Showing <span>{trips.length} trips</span> available
         </div>
-        <div style={{ display: filtersOpen ? "block" : "none" }}>
-          <div className="fgroup">
-            <div className="fgroup-title">Activity Type</div>
-            <div>
-              {ACTIVITIES.map((a) => (
-                <label className="chk-opt" key={a}>
-                  <input
-                    type="checkbox"
-                    checked={activities.includes(a)}
-                    onChange={() => toggle(a, activities, setActivities)}
-                  />{" "}
-                  {a}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="fgroup">
-            <div className="fgroup-title">Duration</div>
-            <div>
-              {DURATIONS.map((d) => (
-                <label className="chk-opt" key={d}>
-                  <input
-                    type="checkbox"
-                    checked={durations.includes(d)}
-                    onChange={() => toggle(d, durations, setDurations)}
-                  />{" "}
-                  {d}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="fgroup">
-            <div className="fgroup-title">Price Range (PLN / person)</div>
-            <div>
-              {PRICES.map((p) => (
-                <label className="chk-opt" key={p}>
-                  <input
-                    type="checkbox"
-                    checked={prices.includes(p)}
-                    onChange={() => toggle(p, prices, setPrices)}
-                  />{" "}
-                  {p}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="fgroup">
-            <div className="fgroup-title">Difficulty</div>
-            <div className="diff-btns">
-              {DIFFS.map((d) => (
+        <div className="trips-controls-btns">
+          <div className="dropdown" ref={filtersRef}>
+            <button
+              className={`dropdown-btn${filtersOpen ? " active" : ""}`}
+              onClick={() => {
+                setFiltersOpen((v) => !v);
+                setSortOpen(false);
+              }}
+            >
+              Filters
+              {anyActive && <span className="dropdown-dot" />}
+              <span
+                className="dropdown-arr"
+                style={{ transform: filtersOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+              >
+                ▼
+              </span>
+            </button>
+            {filtersOpen && (
+              <div className="dropdown-panel filters-panel">
+                <div className="filters-panel-head">
+                  <span>Filter trips</span>
+                  {anyActive && (
+                    <button className="filters-clear" onClick={clearFilters}>
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="filters-grid">
+                  <div className="fgroup">
+                    <div className="fgroup-title">Activity Type</div>
+                    <div>
+                      {ACTIVITIES.map((a) => (
+                        <label className="chk-opt" key={a}>
+                          <input
+                            type="checkbox"
+                            checked={activities.includes(a)}
+                            onChange={() => toggle(a, activities, setActivities)}
+                          />{" "}
+                          {a}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="fgroup">
+                    <div className="fgroup-title">Duration</div>
+                    <div>
+                      {DURATIONS.map((d) => (
+                        <label className="chk-opt" key={d}>
+                          <input
+                            type="checkbox"
+                            checked={durations.includes(d)}
+                            onChange={() => toggle(d, durations, setDurations)}
+                          />{" "}
+                          {d}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="fgroup">
+                    <div className="fgroup-title">Price Range (PLN / person)</div>
+                    <div>
+                      {PRICES.map((p) => (
+                        <label className="chk-opt" key={p}>
+                          <input
+                            type="checkbox"
+                            checked={prices.includes(p)}
+                            onChange={() => toggle(p, prices, setPrices)}
+                          />{" "}
+                          {p}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="fgroup">
+                    <div className="fgroup-title">Difficulty</div>
+                    <div className="diff-btns">
+                      {DIFFS.map((d) => (
+                        <button
+                          key={d}
+                          className={`diff-btn${diff === d ? " active" : ""}`}
+                          onClick={() => setDiff(d)}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <button
-                  key={d}
-                  className={`diff-btn${diff === d ? " active" : ""}`}
-                  onClick={() => setDiff(d)}
+                  className="filters-apply"
+                  onClick={() => {
+                    showToast("✅ Filters applied!");
+                    setFiltersOpen(false);
+                  }}
                 >
-                  {d}
+                  Show Results
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
-          <button className="filters-apply" onClick={() => showToast("✅ Filters applied!")}>
-            Show Results
-          </button>
-        </div>
-      </aside>
 
-      <div>
-        <div className="trips-header">
+          <div className="dropdown" ref={sortRef}>
+            <button
+              className={`dropdown-btn${sortOpen ? " active" : ""}`}
+              onClick={() => {
+                setSortOpen((v) => !v);
+                setFiltersOpen(false);
+              }}
+            >
+              Sort by
+              <span
+                className="dropdown-arr"
+                style={{ transform: sortOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+              >
+                ▼
+              </span>
+            </button>
+            {sortOpen && (
+              <div className="dropdown-panel sort-panel">
+                {(
+                  [
+                    ["Upcoming", "Upcoming"],
+                    ["Price", "Price ↑"],
+                    ["Popular", "Most Popular"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    className={`sort-btn${sort === key ? " active" : ""}`}
+                    onClick={() => {
+                      setSort(key);
+                      setSortOpen(false);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="trips-list">
+        {trips.length === 0 ? (
           <div
             style={{
-              fontFamily: "Montserrat,sans-serif",
-              fontWeight: 700,
-              fontSize: ".88rem",
-              color: "#4a5568",
+              background: "#fff",
+              borderRadius: 14,
+              padding: 40,
+              textAlign: "center",
+              color: "#7a8599",
             }}
           >
-            Showing <span style={{ color: "#2952c8" }}>{trips.length} trips</span> available
+            No trips match your filters.
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: ".82rem", fontWeight: 600, color: "#4a5568" }}>Sort:</span>
-            <div className="sort-btns">
-              {(
-                [
-                  ["Upcoming", "Upcoming"],
-                  ["Price", "Price ↑"],
-                  ["Popular", "Most Popular"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`sort-btn${sort === key ? " active" : ""}`}
-                  onClick={() => setSort(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div>
-          {trips.length === 0 ? (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 14,
-                padding: 40,
-                textAlign: "center",
-                color: "#7a8599",
-              }}
-            >
-              No trips match your filters.
-            </div>
-          ) : (
-            trips.map((t) => <TripCard key={t.id} t={t} onOpen={setSelected} />)
-          )}
-        </div>
+        ) : (
+          trips.map((t) => <TripCard key={t.id} t={t} onOpen={setSelected} />)
+        )}
       </div>
 
       <TripModal trip={selected} onClose={() => setSelected(null)} />
