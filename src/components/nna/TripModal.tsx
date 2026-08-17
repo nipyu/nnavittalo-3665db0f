@@ -14,7 +14,7 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
 
   if (!trip) return null;
 
-  const gallery = GALLERY[trip.activity] || GALLERY.Kayaking;
+  const gallery = GALLERY[trip.activity] ?? GALLERY["Kayaking"] ?? [];
   const isComingSoon = trip.comingSoon === true;
   const amenities = [
     "✅ " + (trip.included || "Equipment included"),

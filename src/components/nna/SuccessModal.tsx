@@ -23,7 +23,7 @@ export function SuccessModal() {
       if (cancelled || !phoneRef.current) return;
       itiRef.current = intlTelInput(phoneRef.current, {
         initialCountry: "auto",
-        geoIpLookup: (success) => {
+        geoIpLookup: (success: (code: string) => void) => {
           fetch("https://ipapi.co/json")
             .then((r) => r.json())
             .then((d) => success(d.country_code))

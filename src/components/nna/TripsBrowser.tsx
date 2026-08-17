@@ -282,11 +282,13 @@ export function TripsBrowser() {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: ".82rem", fontWeight: 600, color: "#4a5568" }}>Sort:</span>
             <div className="sort-btns">
-              {[
-                ["Upcoming", "Upcoming"],
-                ["Price", "Price ↑"],
-                ["Popular", "Most Popular"],
-              ].map(([key, label]) => (
+              {(
+                [
+                  ["Upcoming", "Upcoming"],
+                  ["Price", "Price ↑"],
+                  ["Popular", "Most Popular"],
+                ] as const
+              ).map(([key, label]) => (
                 <button
                   key={key}
                   className={`sort-btn${sort === key ? " active" : ""}`}
