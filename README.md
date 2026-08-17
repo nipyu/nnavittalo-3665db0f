@@ -1,6 +1,6 @@
-# Exact Duplicate Site
+# Site
 
-create exact same website
+create website
 
 This project was built with [Lovable](https://lovable.dev).
 
