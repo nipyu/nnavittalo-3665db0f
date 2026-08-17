@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import "./nna.css";
-@import "intl-tel-input/styles";
+@import "intl-tel-input/styles-no-assets";
 
 @custom-variant dark (&:is(.dark *));
 
