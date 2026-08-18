@@ -4,11 +4,4 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  nitro: {
-    preset: 'github-pages',
-    output: {
-      dir: ".output",
-      publicDir: ".output/public"
-    }
-  }
 });
