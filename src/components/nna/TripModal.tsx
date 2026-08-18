@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { GALLERY, type Trip } from "@/lib/nna-data";
+import { GALLERY } from "@/lib/nna-data";
+import { type Package } from "@/hooks/use-packages";
 import { showToast } from "./Toast";
 
 const STRIPE_LINK = "https://buy.stripe.com/7sY6oG5aI3MKcVW4i148001";
 
-export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () => void }) {
+export function TripModal({ trip, onClose }: { trip: Package | null; onClose: () => void }) {
   useEffect(() => {
     document.body.style.overflow = trip ? "hidden" : "";
     return () => {
@@ -15,14 +16,32 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
   if (!trip) return null;
 
   const gallery = GALLERY[trip.activity] ?? GALLERY["Kayaking"] ?? [];
-  const isComingSoon = trip.comingSoon === true;
-  const amenities = [
-    "✅ " + (trip.included || "Equipment included"),
-    " ✅ Professional guide / instructor",
-    "✅ Meals & snacks Included",
-    "✅ Safety gear",
-    "✅ Transport from meeting point",
-  ];
+  const isComingSoon = trip.coming_soon === true || trip.is_disabled === true;
+
+  // Parse features safely
+  let amenities: string[] = [];
+  try {
+    if (typeof trip.features === "string") {
+      amenities = JSON.parse(trip.features);
+    } else if (Array.isArray(trip.features)) {
+      amenities = trip.features;
+    }
+  } catch (e) {
+    amenities = [
+      "✅ " + (trip.included || "Equipment included"),
+      "✅ Professional guide / instructor",
+      "✅ Meals & snacks Included",
+      "✅ Safety gear",
+      "✅ Transport from meeting point",
+    ];
+  }
+
+  if (amenities.length === 0) {
+    amenities = [
+      "✅ " + (trip.included || "Equipment included"),
+      "✅ Professional guide / instructor",
+    ];
+  }
 
   const confirmBooking = () => {
     showToast("🚀 Redirecting to secure payment...");
@@ -32,7 +51,7 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
   return (
     <div
       className="modal-overlay"
-      style={{ display: "flex" }}
+      style={{ display: "flex", zIndex: 100 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -66,7 +85,7 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
           <div className="modal-main">
             <div className="modal-gallery">
               <div className="gallery-grid">
-                <img src={gallery[0]} alt={trip.title} />
+                <img src={trip.photo || gallery[0]} alt={trip.title} />
                 <div className="gallery-sub">
                   {gallery.slice(1, 5).map((img) => (
                     <img key={img} src={img} alt="" loading="lazy" />
@@ -93,9 +112,43 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
                 marginBottom: 16,
               }}
             >
-              {trip.desc +
+              {trip.desc_text +
                 " Whether you're a first-timer or a seasoned adventurer, this package is carefully designed to deliver an unforgettable experience from start to finish."}
             </p>
+
+            {trip.itinerary && (
+              <>
+                <h4
+                  style={{
+                    fontFamily: "Montserrat,sans-serif",
+                    fontWeight: 700,
+                    fontSize: ".85rem",
+                    color: "#1a1f36",
+                    marginBottom: 10,
+                    marginTop: 20,
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  Itinerary
+                </h4>
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 12,
+                    padding: 20,
+                    marginBottom: 20,
+                    color: "#475569",
+                    fontSize: "0.9rem",
+                    lineHeight: 1.6,
+                  }}
+                  className="itinerary-rich-text"
+                  dangerouslySetInnerHTML={{ __html: trip.itinerary }}
+                />
+              </>
+            )}
+
             <h4
               style={{
                 fontFamily: "Montserrat,sans-serif",
@@ -151,7 +204,7 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
                       color: "#0f2266",
                     }}
                   >
-                    {trip.showPrice ? trip.tripDate || "17 April 2026" : "Date TBA"}
+                    {trip.show_price ? trip.trip_date || "17 April 2026" : "Date TBA"}
                   </div>
                   <div style={{ fontSize: ".78rem", color: "#4a5568", marginTop: 2 }}>
                     Departure date
@@ -166,10 +219,10 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
               <div className="booking-label">Total price</div>
               <div className="booking-price">
                 {isComingSoon ? (
-                  "Price Coming Soon"
+                  "Currently Unavailable"
                 ) : (
                   <>
-                    {trip.price} <span style={{ fontSize: "1rem" }}>PLN</span>
+                    {trip.price_pln} <span style={{ fontSize: "1rem" }}>PLN</span>
                     <span
                       style={{
                         fontSize: ".9rem",
@@ -178,7 +231,7 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
                         marginLeft: 8,
                       }}
                     >
-                      (~{trip.priceEur ?? Math.round(trip.price * 0.23)} EUR)
+                      (~{trip.price_eur ?? Math.round(trip.price_pln * 0.23)} EUR)
                     </span>
                   </>
                 )}
@@ -206,9 +259,24 @@ export function TripModal({ trip, onClose }: { trip: Trip | null; onClose: () =>
                 className={`btn-book-modal${isComingSoon ? " btn-disabled-modal" : ""}`}
                 disabled={isComingSoon}
                 onClick={confirmBooking}
-                style={{ width: "100%", padding: 18, fontWeight: 800 }}
+                style={
+                  isComingSoon
+                    ? {
+                        background: "#e2e8f0",
+                        color: "#94a3b8",
+                        cursor: "not-allowed",
+                        width: "100%",
+                        padding: 18,
+                        fontWeight: 800,
+                      }
+                    : { width: "100%", padding: 18, fontWeight: 800 }
+                }
               >
-                {isComingSoon ? "Coming Soon" : "🎉 Book Your Spot"}
+                {isComingSoon
+                  ? trip.is_disabled
+                    ? "Unavailable"
+                    : "Coming Soon"
+                  : "🎉 Book Your Spot"}
               </button>
 
               <p

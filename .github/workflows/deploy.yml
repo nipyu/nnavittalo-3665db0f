@@ -33,16 +33,13 @@ jobs:
       - name: Build static site
         run: bun run build
 
-      - name: Add .nojekyll
-        run: touch .output/public/.nojekyll
-
       - name: Set up GitHub Pages
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .output/public
+          path: dist
 
   deploy:
     environment:

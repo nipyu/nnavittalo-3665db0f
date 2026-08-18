@@ -1702,3 +1702,20 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.itinerary-rich-text h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.itinerary-rich-text h2:first-child {
+  margin-top: 0;
+}
+.itinerary-rich-text p {
+  margin-bottom: 1rem;
+}
+.itinerary-rich-text p:last-child {
+  margin-bottom: 0;
+}
