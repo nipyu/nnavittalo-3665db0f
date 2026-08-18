@@ -18,7 +18,7 @@ function TripCard({ t, onOpen }: { t: Package; onOpen: (t: Package) => void }) {
         <img src={t.photo} alt={t.title} loading="lazy" />
         <div className="trip-badges">
           {Array.isArray(t.badges) &&
-            t.badges.map((b: unknown, i: number) => (
+            t.badges.map((b: { l: string; t: string }, i: number) => (
               <span key={i} className={`badge badge-${b.t}`}>
                 {b.l}
               </span>
@@ -46,7 +46,7 @@ function TripCard({ t, onOpen }: { t: Package; onOpen: (t: Package) => void }) {
 
         <div className="trip-tags">
           {Array.isArray(t.tags) &&
-            t.tags.map((tg: unknown, i: number) => (
+            t.tags.map((tg: { l: string; t: string }, i: number) => (
               <span key={i} className={`tag tag-${tg.t}`}>
                 {tg.l}
               </span>
