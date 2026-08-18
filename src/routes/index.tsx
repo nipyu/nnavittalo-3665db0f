@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Banner, Hero, InfoGrid } from "@/components/nna/Hero";
 import { TripsBrowser } from "@/components/nna/TripsBrowser";
 import { ContactSection } from "@/components/nna/ContactSection";
-import { SuccessModal } from "@/components/nna/SuccessModal";
 
 const TITLE = "NNA VITTALO — Adventure Travel";
 const DESC =
@@ -35,7 +34,6 @@ function Index() {
       <TripsBrowser />
       <InfoGrid />
       <ContactSection />
-      <SuccessModal />
     </>
   );
 }
