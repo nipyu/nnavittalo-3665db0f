@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Banner } from "@/components/nna/Hero";
 import { TripsBrowser } from "@/components/nna/TripsBrowser";
-import { SuccessModal } from "@/components/nna/SuccessModal";
 
 const TITLE = "All Adventure Camps & Trips — NNA VITTALO";
 const DESC =
@@ -41,7 +40,6 @@ function TripsPage() {
       </div>
       <Banner />
       <TripsBrowser />
-      <SuccessModal />
     </>
   );
 }
